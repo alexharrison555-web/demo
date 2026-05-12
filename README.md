@@ -7,19 +7,17 @@ Next.js demo app: an AI-powered recruitment intake chat that profiles a candidat
 - Next.js 14 (Pages Router)
 - React 18 + TypeScript
 - Tailwind CSS
-- Anthropic Claude API (proxied server-side)
+- Anthropic Claude API (called directly from the browser)
 
-## Local setup
+## Setup
+
+1. Open `pages/index.tsx`
+2. Find the line `const ANTHROPIC_API_KEY = "PASTE_YOUR_KEY_HERE";`
+3. Replace `PASTE_YOUR_KEY_HERE` with your Anthropic API key
+4. Run:
 
 ```bash
-# 1. Install
 npm install
-
-# 2. Add your Anthropic key
-cp .env.local.example .env.local
-# then edit .env.local and paste your key
-
-# 3. Run
 npm run dev
 ```
 
@@ -27,22 +25,26 @@ Open <http://localhost:3000>.
 
 ## Deploy to Vercel
 
-1. Push to a GitHub repo.
+1. Push to a GitHub repo (make sure the repo is **private** — your key will be in the bundle).
 2. Import the repo into Vercel.
-3. In **Project Settings → Environment Variables**, add:
-   - `ANTHROPIC_API_KEY` = your Anthropic key (Production, Preview, Development).
-4. Deploy. That's it.
+3. Deploy. No environment variables needed.
 
-The API key only ever lives on the server — `pages/api/chat.ts` is a serverless function that proxies requests to Anthropic and never exposes the key to the browser.
+## Security note
+
+The API key is in the client-side bundle in this version. That means:
+
+- Anyone who opens DevTools on the live site can see and copy the key.
+- This is fine for a short interview demo with a low-credit key.
+- Revoke the key at <https://console.anthropic.com/settings/keys> as soon as the demo is done.
+
+For anything beyond a demo, move the key back to a serverless function. The original proxy lived at `pages/api/chat.ts` — restore it, read the key from `process.env.ANTHROPIC_API_KEY`, and point `CHAT_ENDPOINT` back to `/api/chat`.
 
 ## File layout
 
 ```
 pages/
-  index.tsx        Chat intake (Beat 1 → Beat 3, CV upload, hand-off)
+  index.tsx        Chat intake (Beat 1 to Beat 3, CV upload, hand-off)
   results.tsx     Role matches + consultant card
-  api/
-    chat.ts        Anthropic proxy (uses ANTHROPIC_API_KEY)
 lib/
   prompt.ts        System prompt + model id
   data.ts          Job and recruiter lookup tables, types
@@ -52,13 +54,8 @@ styles/
 
 ## How the flow works
 
-1. User lands on `/` → chat seeds itself with a `[The candidate has just opened…]` message so Claude opens warmly.
+1. User lands on `/` and the chat seeds itself with a placeholder message so Claude opens warmly.
 2. Claude follows the 3-beat conversation defined in `lib/prompt.ts`.
 3. When Claude emits `[SHOW_CV_UPLOAD]` the CV drop-zone renders.
-4. When Claude emits a final `<CANDIDATE_DATA>{…}</CANDIDATE_DATA>` block, the JSON is saved to `localStorage` and the user is routed to `/results`.
-5. `/results` reads from `localStorage`, picks the matched consultant + top 3 roles from `lib/data.ts`, and renders the page.
-
-## Notes
-
-- The data hand-off via `localStorage` is intentional for a demo. For production you'd want server-side persistence.
-- The original visual design is preserved 1:1 via CSS variables and keyframes in `styles/globals.css` — Tailwind handles layout and most utilities, but the tokens (`--green`, `--shadow-card`, etc.) match the original HTML exactly.
+4. When Claude emits a final `<CANDIDATE_DATA>{...}</CANDIDATE_DATA>` block, the JSON is saved to localStorage and the user is routed to `/results`.
+5. `/results` reads from localStorage, picks the matched consultant + top 3 roles from `lib/data.ts`, and renders the page.

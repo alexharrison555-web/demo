@@ -17,7 +17,15 @@ type ChatItem =
   | { kind: "cv-uploaded"; id: string; filename: string }
   | { kind: "finalizing"; id: string };
 
-const CHAT_ENDPOINT = "/api/chat";
+// ============================================================
+// API key — hardcoded for demo use only.
+// REPLACE THIS with your own key locally before deploying.
+// Generate a fresh one at https://console.anthropic.com/settings/keys
+// Revoke it after the demo.
+// ============================================================
+const ANTHROPIC_API_KEY = "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";
+
+const CHAT_ENDPOINT = "https://api.anthropic.com/v1/messages";
 
 let idCounter = 0;
 const nextId = () => `i${++idCounter}`;
@@ -89,7 +97,7 @@ export default function HomePage() {
     setItems((prev) => prev.filter((i) => i.kind !== kind));
   }, []);
 
-  // ----- API call -----
+  // ----- API call (direct to Anthropic for demo) -----
   const callClaude = useCallback(async (): Promise<string> => {
     const body = {
       model: ANTHROPIC_MODEL,
@@ -100,7 +108,12 @@ export default function HomePage() {
 
     const res = await fetch(CHAT_ENDPOINT, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
       body: JSON.stringify(body),
     });
 
