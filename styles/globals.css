@@ -150,6 +150,6 @@ body.chat-page {
   background: transparent;
 }
 body {
-  border-top: 6px solid #242963;
-  border-bottom: 6px solid #242963;
+  border-top: 6px solid #242963 !important;
+  border-bottom: 6px solid #242963 !important;
 }
