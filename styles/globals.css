@@ -149,3 +149,7 @@ body.chat-page {
 .chat-window::-webkit-scrollbar-track {
   background: transparent;
 }
+body {
+  border-top: 6px solid #242963;
+  border-bottom: 6px solid #242963;
+}
